@@ -4,12 +4,13 @@ DND COMBAT HELPER
 Keep track of players, and create monsters for your DND encounters.
 Roll initiatives for monsters in battle, and keep track of who's turn it is.
 Mark people as dead, or bleeding out, and tally up the party's EXP.
+
+Robert Stefanic (c) 2016
 """
 
 import sys
-import os
 
-import battle
+from battle import *
 from database import *
 from colorama import Fore, Back, Style, init
 
@@ -51,7 +52,7 @@ def main_loop():
         if user_input == 'a':
             add_to_db()
         elif user_input == 'i':
-            battle.initialize_battle()
+            initialize_battle()
         elif user_input == 'q':
             clear()
             print("Good bye!")
@@ -61,12 +62,12 @@ def main_loop():
 def main_menu():
     """Display the Main Menu"""
     clear()
-    print(Fore.GREEN + "*" * 50)
-    print("\t\t    " + Style.BRIGHT + "MAIN MENU")
-    print(Fore.GREEN + "*" * 50)
-    print("\tEnter " + Back.WHITE + Fore.BLACK + "'a'" + Back.RESET + Fore.RESET + " to add Fighters to the Database,")
-    print("\tEnter " + Back.WHITE + Fore.BLACK + "'i'" + Back.RESET + Fore.RESET + " to initialize or start a battle.")
-    print("\tEnter " + Back.WHITE + Fore.BLACK + "'q'" + Back.RESET + Fore.RESET + " to quit.")
+    print(Fore.GREEN + "*" * 80)
+    print("\t\t\t    " + Style.BRIGHT + "MAIN MENU")
+    print(Fore.GREEN + "*" * 80)
+    print("\t\tEnter " + Back.WHITE + Fore.BLACK + "'a'" + Back.RESET + Fore.RESET + " to add Fighters to the Database,")
+    print("\t\tEnter " + Back.WHITE + Fore.BLACK + "'i'" + Back.RESET + Fore.RESET + " to initialize or start a battle.")
+    print("\t\tEnter " + Back.WHITE + Fore.BLACK + "'q'" + Back.RESET + Fore.RESET + " to quit.")
 
 
 def clear():
@@ -79,20 +80,25 @@ def clear():
 
 def add_to_db():
     """Add another fighter to the battle."""
+
+    # Set the invalid flag to false
     invalid = False
 
     while True:
         clear()
-        print(Fore.GREEN + "*" * 50)
-        if invalid:
-            print("\t\t" + Style.BRIGHT + "ADD FIGHTER\t" + Back.RED + "** INVALID INPUT **")
-        else:
-            print("\t\t" + Style.BRIGHT + "ADD FIGHTER")
-        print(Fore.GREEN + "*" * 50)
-        print("\tEnter " + Back.WHITE + Fore.BLACK + "'p'" + Back.RESET + Fore.RESET + " to add players to database,")
-        print("\tEnter " + Back.WHITE + Fore.BLACK + "'m'" + Back.RESET + Fore.RESET + " to add monsters to database,")
-        print("\tEnter " + Back.WHITE + Fore.BLACK + "'q'" + Back.RESET + Fore.RESET + " to return to main menu.")
 
+        # Print menu
+        print(Fore.GREEN + "*" * 80)
+        if invalid:
+            print("\t\t\t  " + Style.BRIGHT + "ADD FIGHTER\t" + Back.RED + "** INVALID INPUT **")
+        else:
+            print("\t\t\t  " + Style.BRIGHT + "ADD FIGHTER")
+        print(Fore.GREEN + "*" * 80)
+        print("\t\tEnter " + Back.WHITE + Fore.BLACK + "'p'" + Back.RESET + Fore.RESET + " to add players to database,")
+        print("\t\tEnter " + Back.WHITE + Fore.BLACK + "'m'" + Back.RESET + Fore.RESET + " to add monsters to database,")
+        print("\t\tEnter " + Back.WHITE + Fore.BLACK + "'q'" + Back.RESET + Fore.RESET + " to return to main menu.")
+
+        # Ask user for action, do that action
         user_input = input(">> ")
         if user_input == 'p':
             invalid = False
@@ -113,23 +119,28 @@ def add_monster():
         """Print the Monsters database so the user knows what monsters or characters have been added"""
         monsters = Monsters.select()
         clear()
-        print(Fore.GREEN + "*" * 50)
-        print("\t\t" + Style.BRIGHT + "Monsters Database")
-        print("\t   " + Style.DIM + "(Monsters in red are special)")
-        print(Fore.GREEN + "_" * 50)
+        print(Fore.GREEN + "*" * 80)
+        print("\t\t\t" + Style.BRIGHT + "Monsters Database")
+        print("\t\t  " + Style.DIM + "(Monsters in red are special)")
+        print(Fore.GREEN + "_" * 80 + "\n")
         for monster in monsters:
             if monster.special:
-                print("\t\t" + Fore.RED + monster.monster_name)
+                print("\t\t\t" + Fore.RED + monster.monster_name)
             else:
-                print("\t\t" + monster.monster_name)
-        print(Fore.GREEN + "_" * 50)
-        print(Fore.GREEN + "*" * 50)
+                print("\t\t\t" + monster.monster_name)
+        print(Fore.GREEN + "_" * 80)
+        print(Fore.GREEN + "*" * 80)
 
     while True:
+        # Print all the monsters in the database
         print_monsters_database()
+
+        # Display options, ask for input
         print(Back.WHITE + Fore.BLACK + "[A]" + Back.RESET + Fore.RESET + 'dd a new monster, or ' +
               Back.WHITE + Fore.BLACK + "[Q]" + Back.RESET + Fore.RESET + "uit to go back to the previous menu.")
         user_input = input(">> ").lower()
+
+        # Gather necessary data to add a monster to the database
         if user_input == 'a':
             name = input("Monster Type/Name?\n>> ")
             hp = input("Monster HP?\n>> ")
@@ -137,7 +148,12 @@ def add_monster():
             exp = input("Monster EXP?\n>> ")
             init_mod = input("Monster Initiative?\n>> ")
             special = input("Is this monster special? [y/N]\n>> ")
-            Combatant(name, hp, ac, exp, init_mod, special).add_monster_to_db()
+            try:
+                Combatant(name, hp, ac, exp, init_mod, special).add_monster_to_db()
+            except ValueError:
+                input(Fore.RED + "** ERROR: Invalid entries for monster ")
+
+        # Go back a page
         elif user_input == 'q':
             break
 
@@ -149,28 +165,39 @@ def add_player():
         """Print the Player Database so the user knows everyone who's already been added"""
         players = Players.select()
         clear()
-        print(Fore.GREEN + "*" * 50)
-        print("\t\t" + Style.BRIGHT + "Players Database")
-        print(Fore.GREEN + "_" * 50)
+        print(Fore.GREEN + "*" * 80)
+        print("\t\t\t  " + Style.BRIGHT + "Players Database")
+        print(Fore.GREEN + "_" * 80 + "\n")
         for player in players:
-            print("\t\t" + player.player_name)
-        print(Fore.GREEN + "_" * 50)
-        print(Fore.GREEN + "*" * 50)
+            print("\t\t\t" + player.player_name)
+        print(Fore.GREEN + "_" * 80)
+        print(Fore.GREEN + "*" * 80)
 
     while True:
+        # Print all the players in the player database
         print_players_database()
         print(Back.WHITE + Fore.BLACK + "[A]" + Back.RESET + Fore.RESET + 'dd new player, or ' +
               Back.WHITE + Fore.BLACK + "[Q]" + Back.RESET + Fore.RESET + "uit to go back to the previous menu.")
         user_input = input(">> ").lower()
+
+        # Gather the necessary information to add a player to the player database
         if user_input == 'a':
             name = input("Player name?\n>> ")
             ac = input("Player AC?\n>> ")
             hp = input("Player HP?\n>> ")
-            Player(name, hp, ac).add_fighter_to_db()
+            try:
+                Player(name, hp, ac).add_fighter_to_db()
+            except ValueError:
+                input(Fore.RED + "** ERROR: Invalid entries for player ")
+
+        # Go back a screen
         elif user_input == 'q':
             break
 
 
 if __name__ == "__main__":
+    # Define the terminal dimensions, initialize the database, and start the program
+    os.environ['LINES'] = "25"
+    os.environ['COLUMNS'] = "80"
     initialize_db()
     main_loop()
