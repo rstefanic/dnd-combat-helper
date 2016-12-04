@@ -5,6 +5,9 @@ __pycache__/
 *$py.class
 *.db
 /.idea
+*.sln
+*.pyproj
+/.vs/dnd-combat-helper/v14
 
 # C extensions
 *.so
