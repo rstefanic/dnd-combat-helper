@@ -24,7 +24,7 @@ battle_list = []
 class Screen:
     """The object to set up the screen, and change the screen"""
 
-    """ There are twenty lines between the header and the footer,
+    """There are twenty lines between the header and the footer,
         so to keep it consistent, this value tracks the number of lines"""
     lines = 20
     show_numbers = False
@@ -35,35 +35,36 @@ class Screen:
         always return. The default options are set here in the arguments, but it changes
         depending on where the method is called."""
 
-        self.clear()
-        print(Fore.GREEN + "*" * 80)
-        print("\t\t\t\t    " + Style.BRIGHT + "BATTLE")
-        print(Fore.GREEN + "*" * 80)
-        print("*")
+        screen_output = ("\n" + Fore.GREEN + "*" * 80)
+        screen_output += ("\n" + "\t\t\t\t    " + Style.BRIGHT + "BATTLE")
+        screen_output += ("\n" + Fore.GREEN + "*" * 80)
+        screen_output += ("\n" + "*")
 
         for fighter in battle_list:
 
             # Check to see if the numbers next to their names should be shown
             if not show_numbers:
-                print("*\t\t", end='')
+                screen_output += (Fore.GREEN + "\n" + "*\t\t")
             else:
-                print("*\t{}\t".format(battle_list.index(fighter) + 1), end='')
+                screen_output += ("\n" + Fore.RESET + "*\t{}\t".format(battle_list.index(fighter) + 1))
 
             # Players are green, NPCs are white
             if fighter['player'] and fighter['turn']:
-                print(">>\t" + Fore.GREEN + fighter['name'])
+                screen_output += (Fore.RESET + ">>\t" + Fore.GREEN + fighter['name'])
             elif fighter['player']:
-                print("\t" + Fore.GREEN + fighter['name'])
+                screen_output += ("\t" + Fore.GREEN + fighter['name'])
             elif fighter['turn']:
-                print(">>\t" + fighter['name'])
+                screen_output += (Fore.RESET + ">>\t" + fighter['name'])
             else:
-                print("\t" + fighter['name'])
+                screen_output += (Fore.RESET + "\t" + fighter['name'])
 
         for i in range(1, lines):
-            print("*")
+            screen_output += (Fore.GREEN + "\n" + "*")
 
-        print(Fore.GREEN + "*" * 80)
+        screen_output += ("\n" + Fore.GREEN + "*" * 80)
 
+        self.clear()
+        print(screen_output)
         """Prompt user for input, and return that input in lowercase"""
         return input(options).lower()
 
@@ -137,14 +138,14 @@ class Screen:
                         """Try and retrieve the player's information based on the player's id.
                         If it doesn't exist, then complain to the user. If it does exist, then add
                         that player, and subtract a line from the screen"""
-
                         player = Players.get(Players.id == user_input)
                         print(player.player_name + "\n\n\n")
                         battle_list.append({"name": player.player_name, "player": True,
                                             "init": None, "turn": False})
 
-                    except Players.PlayersDoesNotExist:
-                        print(Fore.RED + "** Invalid entry. That player does not exist")
+                    except:
+                        input(Fore.RED + "** Invalid entry. That player does not exist. Redirecting back to main menu.")
+                        break
 
                     else:
                         self.lines -= 1
@@ -175,8 +176,10 @@ class Screen:
                         monster = Monsters.get(Monsters.id == user_input)
                         battle_list.append({"name": monster.monster_name, "player": False,
                                             "init": monster.init_mod, "turn": False})
-                    except Monsters.MonstersDoesNotExist:
-                        print(Fore.RED + "** Invalid entry. That monster does not exist")
+                    except:
+                        input(Fore.RED + "** Invalid entry. That monster does not exist. Redirecting back to the main menu.")
+                        break
+
                     else:
                         self.lines -= 1
                         break
